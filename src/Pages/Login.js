@@ -49,10 +49,6 @@ const LoginPage = () => {
           localStorage.setItem("vendorEmail", data.vendor.email);
           localStorage.setItem("vendorLogo", data.vendor.businessLogo);
           localStorage.setItem("vendorToken", data.token);
-          console.log("Vendor ID stored in localStorage:", data.vendor._id);
-        }
-        if (data.token) {
-          localStorage.setItem("vendorToken", data.token);
         }
 
         navigate("/dashboard");
@@ -126,13 +122,28 @@ const LoginPage = () => {
             <button
               type="submit"
               className={`w-full p-3 text-white bg-blue-600 rounded-md 
-                         hover:bg-blue-700 transition duration-200 transform ${isLoading
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:scale-105"
-                }`}
+                         hover:bg-blue-700 transition duration-200 transform ${
+                           isLoading
+                             ? "opacity-50 cursor-not-allowed"
+                             : "hover:scale-105"
+                         }`}
               disabled={isLoading}
             >
               {isLoading ? "Logging in..." : "Login"}
+            </button>
+
+            {/* Signup Button */}
+            <p className="text-center text-gray-600 mt-2">
+              Don’t have an account?
+            </p>
+
+            <button
+              type="button"
+              onClick={() => navigate("/register")}
+              className="w-full p-3 text-blue-600 border border-blue-600 rounded-md 
+                         hover:bg-blue-50 transition duration-200 transform hover:scale-105"
+            >
+              Create an Account
             </button>
           </form>
         </div>
