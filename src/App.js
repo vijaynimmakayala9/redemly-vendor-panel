@@ -89,6 +89,8 @@ import SurveyList from "./Pages/SurveyList.js";
 import SubmittedSurveys from "./Pages/SubmittedSurveys.js";
 import VendorCouponsTable from "./Pages/CouponPage.js";
 import VendorNotifications from "./Pages/VendorNotifications.js";
+import VendorRegistration from "./Pages/VendorRegistation.js";
+import MyProfile from "./Pages/MyProfile.js";
 
 
 
@@ -98,6 +100,7 @@ function App() {
     <Routes>
       {/* Login page rendered outside AdminLayout */}
       <Route path="/" element={<LoginPage />} />
+      <Route path="/register" element={<VendorRegistration />} />
 
       {/* All other routes inside AdminLayout */}
       <Route
@@ -171,7 +174,7 @@ function App() {
               <Route path="/surveylist" element={<SurveyList />} />
               <Route path="/submitted-survey" element={<SubmittedSurveys />} />
               <Route path="/notifications" element={<VendorNotifications />} />
-
+              <Route path="/profile" element={<MyProfile/>} />
 
 
 

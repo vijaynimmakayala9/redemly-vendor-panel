@@ -36,6 +36,7 @@ const Dashboard = () => {
         throw new Error(`Error fetching data: ${response.statusText}`);
       }
       const data = await response.json();
+      console.log("Dashboard Data:", data);
       setDashboardData(data);
     } catch (err) {
       setError(err.message || "Failed to fetch dashboard data");

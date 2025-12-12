@@ -31,7 +31,7 @@ const CompanySidebar = ({ isCollapsed, isMobile }) => {
 
       // Show success message and redirect to login page
       alert("Logout successful");
-      window.location.href = "/company-login"; // Redirecting to the login page
+      window.location.href = "/"; // Redirecting to the login page
     } catch (error) {
       console.error("Logout error:", error);
       alert("Logout failed. Please try again.");

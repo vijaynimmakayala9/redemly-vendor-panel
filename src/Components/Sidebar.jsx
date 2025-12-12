@@ -10,16 +10,10 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
 
-  const handleLogout = async () => {
-    try {
-      await axios.post("https://credenhealth.onrender.com/api/admin/logout", {}, { withCredentials: true });
-      localStorage.removeItem("authToken");
+  const handleLogout = () => {
+      window.location.href = "/";    
       alert("Logout successful");
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Logout error:", error);
-      alert("Logout failed. Please try again.");
-    }
+   
   };
 
   const elements = [
@@ -28,6 +22,13 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       name: "Home",
       path: "/dashboard",
     },
+    {
+    icon: <i className="ri-user-3-fill text-white"></i>,
+    name: "Profile",
+    dropdown: [
+      { name: "My Profile", path: "/profile" }
+    ]
+  },
     {
       icon: <i className="ri-building-fill text-white"></i>,
       name: "Coupons",

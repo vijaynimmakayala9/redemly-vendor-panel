@@ -62,7 +62,7 @@ const VendorNotifications = () => {
   };
 
   if (loading) return <div className="p-6 text-center">Loading notifications...</div>;
-  if (error) return <div className="p-6 text-center text-red-500">Error: {error}</div>;
+  // if (error) return <div className="p-6 text-center text-red-500">Error: {error}</div>;
 
   return (
     <div className="p-6">
