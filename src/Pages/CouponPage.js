@@ -6,13 +6,20 @@ import {
   FaEdit,
   FaTrash,
   FaTimes,
-  FaImage,
   FaCalendarAlt,
+  FaEye,
+  FaStore,
+  FaTag,
+  FaCoins,
+  FaUsers,
+  FaChartBar,
+  FaImage
 } from "react-icons/fa";
 import { FiRefreshCw } from "react-icons/fi";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 const API_BASE_URL = "https://api.redemly.com/api/vendor";
+const ADMIN_API_BASE_URL = "https://api.redemly.com/api/admin";
 
 const VendorCoupons = () => {
   const vendorId = localStorage.getItem("vendorId");
@@ -24,20 +31,23 @@ const VendorCoupons = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [page, setPage] = useState(1);
 
+  // View Modal States
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
+
   // Edit Modal States
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
   const [currentCoupon, setCurrentCoupon] = useState(null);
   const [editForm, setEditForm] = useState({
     name: "",
     category: "",
     discountPercentage: "",
     requiredCoins: "",
-    validityDate: "",
-    couponCodeType: "static",
     limitForSameUser: "",
-    status: "pending",
+    maxUsage: "",
+    validityDate: "",
+    couponCodeType: "%",
   });
 
   // Delete Confirmation State
@@ -50,6 +60,7 @@ const VendorCoupons = () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API_BASE_URL}/${vendorId}/coupons`);
+      console.log("Coupons response:", res.data);
       setCoupons(res.data.coupons || []);
     } catch (err) {
       console.error("Fetch coupons error:", err);
@@ -63,6 +74,12 @@ const VendorCoupons = () => {
     fetchCoupons();
   }, [vendorId]);
 
+  // ================= VIEW COUPON DETAILS =================
+  const openViewModal = (coupon) => {
+    setSelectedCoupon(coupon);
+    setViewModalOpen(true);
+  };
+
   // ================= EDIT COUPON =================
   const openEditModal = (coupon) => {
     setCurrentCoupon(coupon);
@@ -71,12 +88,12 @@ const VendorCoupons = () => {
       category: coupon.category || "",
       discountPercentage: coupon.discountPercentage || "",
       requiredCoins: coupon.requiredCoins || "",
+      limitForSameUser: coupon.limitForSameUser || "",
+      maxUsage: coupon.maxUsage || "",
       validityDate: coupon.validityDate
         ? new Date(coupon.validityDate).toISOString().split("T")[0]
         : "",
-      couponCodeType: coupon.couponCodeType || "static",
-      limitForSameUser: coupon.limitForSameUser || "",
-      status: coupon.status || "pending",
+      couponCodeType: coupon.couponCodeType || "%",
     });
     setEditModalOpen(true);
   };
@@ -89,9 +106,8 @@ const VendorCoupons = () => {
   const handleUpdateCoupon = async () => {
     if (!currentCoupon?._id) return;
 
-    // Basic validation
     if (!editForm.name || !editForm.discountPercentage || !editForm.validityDate) {
-      alert("Name, discount, and validity date are required");
+      alert("Name, discount and validity date are required");
       return;
     }
 
@@ -105,9 +121,9 @@ const VendorCoupons = () => {
         }
       );
 
-      if (response.data.success) {
+      if (response.data.success || response.data.message) {
         alert("Coupon updated successfully ✅");
-        fetchCoupons(); // Refresh the list
+        fetchCoupons();
         setEditModalOpen(false);
       }
     } catch (err) {
@@ -115,36 +131,6 @@ const VendorCoupons = () => {
       alert(err.response?.data?.message || "Failed to update coupon");
     } finally {
       setEditLoading(false);
-    }
-  };
-
-  // ================= UPDATE COUPON IMAGE =================
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !currentCoupon?._id) return;
-
-    setImageUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("couponImage", file);
-
-      const response = await axios.put(
-        `${API_BASE_URL}/update-coupon/${currentCoupon._id}`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-
-      if (response.data.message) {
-        alert("Image updated successfully");
-        fetchCoupons(); // Refresh the list
-      }
-    } catch (err) {
-      console.error("Image upload error:", err);
-      alert("Failed to upload image");
-    } finally {
-      setImageUploading(false);
     }
   };
 
@@ -159,13 +145,16 @@ const VendorCoupons = () => {
 
     setDeleteLoading(true);
     try {
+      // Use the admin API endpoint
       const response = await axios.delete(
-        `${API_BASE_URL}/delete-coupon/${couponToDelete._id}`
+        `https://api.redemly.com/api/vendor/coupon/${couponToDelete._id}`
       );
 
-      if (response.data.success) {
+      console.log("Delete response:", response.data);
+      
+      if (response.data.success || response.data.message) {
         alert("Coupon deleted successfully ✅");
-        fetchCoupons(); // Refresh the list
+        fetchCoupons();
         setDeleteModalOpen(false);
       }
     } catch (err) {
@@ -180,8 +169,9 @@ const VendorCoupons = () => {
   const filteredCoupons = useMemo(() => {
     return coupons.filter((c) => {
       const matchesSearch =
-        c.name?.toLowerCase().includes(search.toLowerCase()) ||
-        c.couponCode?.toLowerCase().includes(search.toLowerCase());
+        (c.name?.toLowerCase().includes(search.toLowerCase()) ||
+         c.category?.toLowerCase().includes(search.toLowerCase()) ||
+         c.couponCode?.toLowerCase().includes(search.toLowerCase()));
 
       const matchesStatus =
         statusFilter === "all" || c.status === statusFilter;
@@ -205,20 +195,24 @@ const VendorCoupons = () => {
       "Name",
       "Category",
       "Discount %",
-      "Coins",
       "Code",
       "Status",
+      "Required Coins",
+      "Usage",
       "Validity",
+      "Created"
     ];
 
     const rows = filteredCoupons.map((c) => [
       c.name,
       c.category,
       c.discountPercentage,
-      c.requiredCoins,
       c.couponCode,
       c.status,
+      c.requiredCoins,
+      `${c.usedCount}/${c.maxUsage}`,
       new Date(c.validityDate).toLocaleDateString(),
+      new Date(c.createdAt).toLocaleDateString(),
     ]);
 
     const csv = headers.join(",") + "\n" + rows.map((r) => r.join(",")).join("\n");
@@ -255,7 +249,10 @@ const VendorCoupons = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gradient-to-br from-blue-50 to-white">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading coupons...</p>
+        </div>
       </div>
     );
   }
@@ -295,7 +292,7 @@ const VendorCoupons = () => {
           <FaSearch className="absolute left-3 top-3.5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by name or code..."
+            placeholder="Search by name, category or code..."
             className="pl-10 pr-4 py-2.5 w-full border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             value={search}
             onChange={(e) => {
@@ -317,9 +314,6 @@ const VendorCoupons = () => {
           <option value="approved">Approved</option>
           <option value="pending">Pending</option>
           <option value="rejected">Rejected</option>
-          <option value="expired">Expired</option>
-          <option value="used">Used</option>
-          <option value="deleted">Deleted</option>
         </select>
 
         <select
@@ -350,35 +344,38 @@ const VendorCoupons = () => {
           <table className="min-w-full">
             <thead className="bg-gradient-to-r from-blue-50 to-blue-100">
               <tr>
-                <th className="p-4 text-left text-sm font-semibold text-blue-900">Coupon</th>
+                <th className="p-4 text-left text-sm font-semibold text-blue-900">#</th>
+                <th className="p-4 text-left text-sm font-semibold text-blue-900">Coupon Name</th>
                 <th className="p-4 text-left text-sm font-semibold text-blue-900">Category</th>
                 <th className="p-4 text-left text-sm font-semibold text-blue-900">Discount</th>
-                <th className="p-4 text-left text-sm font-semibold text-blue-900">Coins</th>
                 <th className="p-4 text-left text-sm font-semibold text-blue-900">Code</th>
                 <th className="p-4 text-left text-sm font-semibold text-blue-900">Status</th>
+                <th className="p-4 text-left text-sm font-semibold text-blue-900">Usage</th>
                 <th className="p-4 text-left text-sm font-semibold text-blue-900">Validity</th>
                 <th className="p-4 text-left text-sm font-semibold text-blue-900">Actions</th>
               </tr>
             </thead>
 
             <tbody>
-              {paginatedCoupons.map((c) => (
+              {paginatedCoupons.map((c, index) => (
                 <tr key={c._id} className="border-t border-blue-50 hover:bg-blue-50/50 transition-colors">
                   <td className="p-4">
+                    <div className="font-mono text-sm text-gray-500">
+                      #{index + 1 + (page - 1) * PAGE_SIZE}
+                    </div>
+                  </td>
+                  <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={c.couponImage || "/default-coupon.png"}
-                        alt={c.name}
-                        className="w-12 h-12 rounded-lg object-cover border border-blue-200"
-                        onError={(e) => {
-                          e.target.src = "/default-coupon.png";
-                        }}
-                      />
+                      {c.couponImage && (
+                        <img 
+                          src={c.couponImage} 
+                          alt={c.name}
+                          className="w-10 h-10 rounded-lg object-cover"
+                        />
+                      )}
                       <div>
-                        <div className="font-semibold text-gray-800">{c.name}</div>
-                        <div className="text-xs text-gray-500">
-                          {new Date(c.createdAt).toLocaleDateString()}
-                        </div>
+                        <div className="font-medium text-gray-900">{c.name}</div>
+                        <div className="text-xs text-gray-500">{c.vendorId?.businessName}</div>
                       </div>
                     </div>
                   </td>
@@ -387,17 +384,23 @@ const VendorCoupons = () => {
                       {c.category}
                     </span>
                   </td>
-                  <td className="p-4 font-bold text-blue-700">{c.discountPercentage}%</td>
                   <td className="p-4">
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium">{c.requiredCoins}</span>
-                      <span className="text-xs text-gray-500">coins</span>
-                    </div>
+                    <div className="font-bold text-blue-700">{c.discountPercentage}%</div>
+                    <div className="text-xs text-gray-500">{c.couponCodeType}</div>
                   </td>
-                  <td className="p-4 font-mono text-sm bg-gray-50 rounded px-2 py-1">
-                    {c.couponCode}
+                  <td className="p-4">
+                    <div className="font-mono text-sm bg-gray-50 rounded px-2 py-1">
+                      {c.couponCode}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">Coins: {c.requiredCoins}</div>
                   </td>
                   <td className="p-4">{statusBadge(c.status)}</td>
+                  <td className="p-4">
+                    <div className="text-sm">
+                      <div className="font-medium">{c.usedCount}/{c.maxUsage}</div>
+                      <div className="text-xs text-gray-500">Limit: {c.limitForSameUser}/user</div>
+                    </div>
+                  </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <FaCalendarAlt className="text-blue-500 text-sm" />
@@ -409,8 +412,15 @@ const VendorCoupons = () => {
                   <td className="p-4">
                     <div className="flex gap-2">
                       <button
+                        onClick={() => openViewModal(c)}
+                        className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                        title="View Details"
+                      >
+                        <FaEye />
+                      </button>
+                      <button
                         onClick={() => openEditModal(c)}
-                        disabled={c.status === "deleted"}
+                        disabled={c.status === "deleted" || c.status === "rejected"}
                         className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         title="Edit Coupon"
                       >
@@ -464,6 +474,165 @@ const VendorCoupons = () => {
         </div>
       )}
 
+      {/* View Coupon Details Modal */}
+      {viewModalOpen && selectedCoupon && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-blue-100">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold text-gray-900">Coupon Details</h3>
+                <button
+                  onClick={() => setViewModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* Header with Image */}
+              <div className="flex items-start gap-4 mb-6">
+                <img 
+                  src={selectedCoupon.couponImage} 
+                  alt={selectedCoupon.name}
+                  className="w-24 h-24 rounded-xl object-cover border border-gray-200"
+                />
+                <div>
+                  <h4 className="text-2xl font-bold text-gray-900">{selectedCoupon.name}</h4>
+                  <div className="flex items-center gap-2 mt-2">
+                    {statusBadge(selectedCoupon.status)}
+                    <span className="text-sm text-gray-600">{selectedCoupon.category}</span>
+                  </div>
+                  <div className="mt-2">
+                    <div className="font-mono text-lg bg-gray-100 px-3 py-1 rounded-lg inline-block">
+                      {selectedCoupon.couponCode}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Left Column */}
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <FaTag className="text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Discount</div>
+                        <div className="text-2xl font-bold text-blue-700">
+                          {selectedCoupon.discountPercentage}%
+                        </div>
+                        <div className="text-xs text-gray-500">Type: {selectedCoupon.couponCodeType}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-purple-50 p-4 rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <FaCoins className="text-purple-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Required Coins</div>
+                        <div className="text-2xl font-bold text-purple-700">
+                          {selectedCoupon.requiredCoins}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 p-4 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <FaUsers className="text-green-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Usage Limits</div>
+                        <div className="font-medium text-gray-900">
+                          {selectedCoupon.usedCount} / {selectedCoupon.maxUsage} used
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {selectedCoupon.limitForSameUser} per user
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-4">
+                  <div className="bg-yellow-50 p-4 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-yellow-100 rounded-lg">
+                        <FaCalendarAlt className="text-yellow-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Validity</div>
+                        <div className="font-medium text-gray-900">
+                          {new Date(selectedCoupon.validityDate).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-gray-100 rounded-lg">
+                        <FaStore className="text-gray-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Vendor</div>
+                        <div className="font-medium text-gray-900">
+                          {selectedCoupon.vendorId?.businessName}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          ID: {selectedCoupon.vendorId?._id}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-indigo-50 p-4 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-100 rounded-lg">
+                        <FaChartBar className="text-indigo-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Created & Updated</div>
+                        <div className="text-xs text-gray-500">
+                          Created: {new Date(selectedCoupon.createdAt).toLocaleString()}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Updated: {new Date(selectedCoupon.updatedAt).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-blue-100 flex justify-end">
+              <button
+                onClick={() => setViewModalOpen(false)}
+                className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Edit Coupon Modal */}
       {editModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -478,54 +647,111 @@ const VendorCoupons = () => {
                   <FaTimes />
                 </button>
               </div>
+              <p className="text-sm text-gray-500 mt-1">Edit coupon details</p>
             </div>
 
             <div className="p-6 space-y-4">
-              {/* Image Upload Section */}
+              {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Coupon Image
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Coupon Name
                 </label>
-                <div className="flex items-center gap-4">
-                  <img
-                    src={currentCoupon?.couponImage || "/default-coupon.png"}
-                    alt="Coupon"
-                    className="w-20 h-20 rounded-lg object-cover border"
+                <input
+                  type="text"
+                  name="name"
+                  value={editForm.name}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-2.5 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  placeholder="Enter coupon name"
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  name="category"
+                  value={editForm.category}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-2.5 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+                  <option value="Food">Food</option>
+                  <option value="Fashion">Fashion</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {/* Discount Percentage */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Discount Percentage
+                </label>
+                <input
+                  type="number"
+                  name="discountPercentage"
+                  value={editForm.discountPercentage}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-2.5 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  placeholder="Enter discount percentage"
+                  min="1"
+                  max="100"
+                />
+              </div>
+
+              {/* Required Coins */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Required Coins
+                </label>
+                <input
+                  type="number"
+                  name="requiredCoins"
+                  value={editForm.requiredCoins}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-2.5 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  placeholder="Enter required coins"
+                  min="0"
+                />
+              </div>
+
+              {/* Limits */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    User Limit
+                  </label>
+                  <input
+                    type="number"
+                    name="limitForSameUser"
+                    value={editForm.limitForSameUser}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2.5 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    placeholder="Per user"
+                    min="1"
                   />
-                  <div>
-                    <label className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors">
-                      <FaImage />
-                      <span>{imageUploading ? "Uploading..." : "Change Image"}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageUpload}
-                        disabled={imageUploading}
-                      />
-                    </label>
-                    <p className="text-xs text-gray-500 mt-1">JPG, PNG, GIF (Max 5MB)</p>
-                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Max Usage
+                  </label>
+                  <input
+                    type="number"
+                    name="maxUsage"
+                    value={editForm.maxUsage}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2.5 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    placeholder="Total usage"
+                    min="1"
+                  />
                 </div>
               </div>
 
-              {/* Form Fields */}
-              {["name", "category", "discountPercentage", "requiredCoins", "limitForSameUser"].map((field) => (
-                <div key={field}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
-                    {field.replace(/([A-Z])/g, " $1")}
-                  </label>
-                  <input
-                    type={field.includes("Percentage") || field.includes("Coins") ? "number" : "text"}
-                    name={field}
-                    value={editForm[field]}
-                    onChange={handleEditChange}
-                    className="w-full px-4 py-2.5 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder={`Enter ${field}`}
-                  />
-                </div>
-              ))}
-
+              {/* Validity Date */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Validity Date
@@ -539,21 +765,19 @@ const VendorCoupons = () => {
                 />
               </div>
 
+              {/* Coupon Code Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
+                  Coupon Type
                 </label>
                 <select
-                  name="status"
-                  value={editForm.status}
+                  name="couponCodeType"
+                  value={editForm.couponCodeType}
                   onChange={handleEditChange}
                   className="w-full px-4 py-2.5 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 >
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="expired">Expired</option>
-                  <option value="used">Used</option>
+                  <option value="%">Percentage (%)</option>
+                  <option value="fixed">Fixed Amount</option>
                 </select>
               </div>
             </div>
@@ -597,11 +821,14 @@ const VendorCoupons = () => {
                   <p className="text-sm text-gray-500">
                     Code: {couponToDelete?.couponCode}
                   </p>
+                  <p className="text-sm text-gray-500">
+                    Category: {couponToDelete?.category}
+                  </p>
                 </div>
               </div>
 
               <p className="text-gray-600 mb-6">
-                This coupon will be marked as "deleted" (soft delete). Are you sure you want to continue?
+                This coupon will be deleted permanently. Are you sure you want to continue?
               </p>
             </div>
 

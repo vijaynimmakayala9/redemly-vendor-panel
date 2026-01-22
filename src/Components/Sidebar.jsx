@@ -46,15 +46,15 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
         { name: "Documents List", path: "/docs" },
       ],
     },
-    {
-      icon: <i className="ri-survey-fill text-white"></i>,
-      name: "Survey",
-      dropdown: [
-        { name: "Create Survey", path: "/createsurvey" },
-        { name: "Get All Surveys", path: "/surveylist" },
-        { name: "Submitted Surveys", path: "/submitted-survey" },
-      ],
-    },
+    // {
+    //   icon: <i className="ri-survey-fill text-white"></i>,
+    //   name: "Survey",
+    //   dropdown: [
+    //     { name: "Create Survey", path: "/createsurvey" },
+    //     { name: "Get All Surveys", path: "/surveylist" },
+    //     { name: "Submitted Surveys", path: "/submitted-survey" },
+    //   ],
+    // },
     {
       icon: <i className="ri-money-dollar-circle-fill text-white"></i>,
       name: "Payments",
