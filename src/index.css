@@ -13,3 +13,125 @@
         scrollbar-width: none;  /* Firefox */
   }
 }
+
+/* Responsive breakpoints */
+@media (max-width: 640px) {
+  .xs\:inline {
+    display: inline;
+  }
+}
+
+@media (max-width: 768px) {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .sidebar {
+    height: calc(100vh);
+  }
+}
+
+/* Animation for dropdown */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Responsive font sizes */
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Active tab styles */
+.active-tab {
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.active-tab:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+}
+
+/* Active dropdown item */
+.active-dropdown-item {
+  background-color: #1e40af;
+  color: white;
+  border-left: 3px solid #fbbf24;
+}
+
+.active-dropdown-item:hover {
+  background-color: #1d4ed8;
+}
+
+/* Animation for active indicator */
+@keyframes slideIn {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.active-indicator {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Hover effects */
+.sidebar-item:hover .sidebar-icon {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+/* Gradient backgrounds */
+.bg-gradient-sidebar {
+  background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+}
+
+/* Responsive active states */
+@media (max-width: 768px) {
+  .active-tab {
+    background: #1e40af;
+  }
+}
+
+/* Smooth transitions for all interactive elements */
+.sidebar-item > * {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

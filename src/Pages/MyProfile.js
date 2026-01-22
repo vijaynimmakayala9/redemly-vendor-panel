@@ -297,7 +297,7 @@ const MyProfile = () => {
                 <div className="bg-blue-50 p-5 rounded-xl border border-blue-200">
                   <label className="text-sm font-medium text-gray-600 flex items-center mb-2">
                     <FileText className="w-4 h-4 mr-1 text-blue-600" />
-                    Till Number
+                    Tin Number
                   </label>
                   {editing ? (
                     <input

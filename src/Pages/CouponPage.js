@@ -50,6 +50,25 @@ const VendorCoupons = () => {
     couponCodeType: "%",
   });
 
+  const [categories, setCategories] = useState([]);
+
+  /* ---------------- FETCH CATEGORIES ---------------- */
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get(
+          "https://api.redemly.com/api/admin/categories"
+        );
+
+        setCategories(res.data?.categories || []);
+      } catch (error) {
+        console.error("Failed to fetch categories", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   // Delete Confirmation State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [couponToDelete, setCouponToDelete] = useState(null);
@@ -151,7 +170,7 @@ const VendorCoupons = () => {
       );
 
       console.log("Delete response:", response.data);
-      
+
       if (response.data.success || response.data.message) {
         alert("Coupon deleted successfully ✅");
         fetchCoupons();
@@ -170,8 +189,8 @@ const VendorCoupons = () => {
     return coupons.filter((c) => {
       const matchesSearch =
         (c.name?.toLowerCase().includes(search.toLowerCase()) ||
-         c.category?.toLowerCase().includes(search.toLowerCase()) ||
-         c.couponCode?.toLowerCase().includes(search.toLowerCase()));
+          c.category?.toLowerCase().includes(search.toLowerCase()) ||
+          c.couponCode?.toLowerCase().includes(search.toLowerCase()));
 
       const matchesStatus =
         statusFilter === "all" || c.status === statusFilter;
@@ -367,8 +386,8 @@ const VendorCoupons = () => {
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       {c.couponImage && (
-                        <img 
-                          src={c.couponImage} 
+                        <img
+                          src={c.couponImage}
                           alt={c.name}
                           className="w-10 h-10 rounded-lg object-cover"
                         />
@@ -493,8 +512,8 @@ const VendorCoupons = () => {
             <div className="p-6">
               {/* Header with Image */}
               <div className="flex items-start gap-4 mb-6">
-                <img 
-                  src={selectedCoupon.couponImage} 
+                <img
+                  src={selectedCoupon.couponImage}
                   alt={selectedCoupon.name}
                   className="w-24 h-24 rounded-xl object-cover border border-gray-200"
                 />
@@ -667,22 +686,25 @@ const VendorCoupons = () => {
               </div>
 
               {/* Category */}
+              {/* CATEGORY SELECT */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Category
                 </label>
+
                 <select
                   name="category"
                   value={editForm.category}
                   onChange={handleEditChange}
                   className="w-full px-4 py-2.5 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 >
-                  <option value="Food">Food</option>
-                  <option value="Fashion">Fashion</option>
-                  <option value="Electronics">Electronics</option>
-                  <option value="Travel">Travel</option>
-                  <option value="Entertainment">Entertainment</option>
-                  <option value="Other">Other</option>
+                  <option value="" disabled>Select Category</option>
+
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat.categoryName}>
+                      {cat.categoryName}
+                    </option>
+                  ))}
                 </select>
               </div>
 

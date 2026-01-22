@@ -131,12 +131,12 @@ const Dashboard = () => {
 
   // Calculate totals
   const calculateTotals = () => {
-    if (!dashboardData) return { 
-      coupons: 0, 
-      downloads: 0, 
-      redemptions: 0, 
-      feedbacks: 0, 
-      rating: 0 
+    if (!dashboardData) return {
+      coupons: 0,
+      downloads: 0,
+      redemptions: 0,
+      feedbacks: 0,
+      rating: 0
     };
     return {
       coupons: dashboardData.totals?.totalCoupons || 0,
@@ -192,9 +192,9 @@ const Dashboard = () => {
         <div className="mt-4 md:mt-0">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <select 
+              <select
                 className="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2 pr-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-                value={timeframe} 
+                value={timeframe}
                 onChange={handleTimeframeChange}
               >
                 <option value="Today">Today</option>
@@ -208,7 +208,7 @@ const Dashboard = () => {
                 </svg>
               </div>
             </div>
-            <button 
+            <button
               onClick={fetchDashboardData}
               className="inline-flex items-center bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm"
             >
@@ -328,23 +328,23 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          
+
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={weeklyDownloads}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="name" 
+              <XAxis
+                dataKey="name"
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: '#666' }}
               />
-              <YAxis 
+              <YAxis
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: '#666' }}
               />
-              <Tooltip 
-                contentStyle={{ 
+              <Tooltip
+                contentStyle={{
                   backgroundColor: 'white',
                   border: '1px solid #e5e7eb',
                   borderRadius: '12px',
@@ -354,30 +354,30 @@ const Dashboard = () => {
               />
               <defs>
                 <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#4ECDC4" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#4ECDC4" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#4ECDC4" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#4ECDC4" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorRedemptions" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#FF6B6B" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#FF6B6B" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#FF6B6B" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#FF6B6B" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <Area 
-                type="monotone" 
-                dataKey="downloads" 
-                stroke="#4ECDC4" 
-                fillOpacity={1} 
+              <Area
+                type="monotone"
+                dataKey="downloads"
+                stroke="#4ECDC4"
+                fillOpacity={1}
                 fill="url(#colorDownloads)"
                 strokeWidth={2}
               />
-              <Area 
-                type="monotone" 
+              <Area
+                type="monotone"
                 dataKey={(entry) => {
                   const redemptionData = weeklyRedemptions.find(r => r.day === entry.day);
                   return redemptionData ? redemptionData.redemptions : 0;
                 }}
-                stroke="#FF6B6B" 
-                fillOpacity={1} 
+                stroke="#FF6B6B"
+                fillOpacity={1}
                 fill="url(#colorRedemptions)"
                 strokeWidth={2}
               />
@@ -403,15 +403,15 @@ const Dashboard = () => {
                     label
                   >
                     {couponStatusData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.color} 
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.color}
                       />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value) => [`${value} coupons`, 'Count']}
-                    contentStyle={{ 
+                    contentStyle={{
                       backgroundColor: 'white',
                       border: '1px solid #e5e7eb',
                       borderRadius: '12px',
@@ -423,8 +423,8 @@ const Dashboard = () => {
               <div className="mt-4 grid grid-cols-2 gap-2 w-full">
                 {couponStatusData.map((entry, index) => (
                   <div key={index} className="flex items-center space-x-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
+                    <div
+                      className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: entry.color }}
                     />
                     <span className="text-sm font-medium text-gray-700">{entry.name}</span>
@@ -451,39 +451,39 @@ const Dashboard = () => {
             <p className="text-sm text-gray-600">Revenue generated per week</p>
           </div>
         </div>
-        
+
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={monthlyRevenue}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               axisLine={false}
               tickLine={false}
               tick={{ fill: '#666' }}
             />
-            <YAxis 
+            <YAxis
               axisLine={false}
               tickLine={false}
               tick={{ fill: '#666' }}
               tickFormatter={(value) => `$${value}`}
             />
-            <Tooltip 
+            <Tooltip
               formatter={(value) => [`$${value}`, 'Revenue']}
-              contentStyle={{ 
+              contentStyle={{
                 backgroundColor: 'white',
                 border: '1px solid #e5e7eb',
                 borderRadius: '12px',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
               }}
             />
-            <Bar 
-              dataKey="revenue" 
+            <Bar
+              dataKey="revenue"
               radius={[8, 8, 0, 0]}
               fill="url(#colorRevenue)"
             >
               {monthlyRevenue.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
+                <Cell
+                  key={`cell-${index}`}
                   fill={barColors[index % barColors.length]}
                   opacity={0.8}
                 />
@@ -491,8 +491,8 @@ const Dashboard = () => {
             </Bar>
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#8884d8" stopOpacity={0.8}/>
-                <stop offset="100%" stopColor="#8884d8" stopOpacity={0.2}/>
+                <stop offset="0%" stopColor="#8884d8" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#8884d8" stopOpacity={0.2} />
               </linearGradient>
             </defs>
           </BarChart>
@@ -507,14 +507,14 @@ const Dashboard = () => {
             <h3 className="text-lg font-bold text-gray-800">Top Coupons</h3>
             <p className="text-gray-600 text-sm mt-1">Most popular coupons</p>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Coupon</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Downloads</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Coupon Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Discount</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -523,30 +523,21 @@ const Dashboard = () => {
                     <tr key={index} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
-                            <span className="text-blue-600 font-bold">${coupon.discountValue || 0}</span>
-                          </div>
+
                           <div className="ml-4">
-                            <div className="font-medium text-gray-900">{coupon.title || "Unnamed Coupon"}</div>
-                            <div className="text-sm text-gray-500">{coupon.code || "No code"}</div>
+                            <div className="font-medium text-gray-900">{coupon.name || "Unnamed Coupon"}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-lg font-bold text-gray-900">
-                          {coupon.downloads || 0}
+                          {coupon.category || "N/A"}
                         </div>
-                        <div className="text-xs text-gray-500">Downloads</div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          (coupon.status || "").toLowerCase() === "active" ? "bg-green-100 text-green-800" :
-                          (coupon.status || "").toLowerCase() === "pending" ? "bg-yellow-100 text-yellow-800" :
-                          (coupon.status || "").toLowerCase() === "expired" ? "bg-gray-100 text-gray-800" :
-                          "bg-blue-100 text-blue-800"
-                        }`}>
-                          {coupon.status || "Unknown"}
-                        </span>
+                        <div className="h-10 w-10 flex-shrink-0 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                          <span className="text-blue-600 font-bold">{coupon.discountPercentage || 0}%</span>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -570,7 +561,7 @@ const Dashboard = () => {
             <h3 className="text-lg font-bold text-gray-800">Recent Feedbacks</h3>
             <p className="text-gray-600 text-sm mt-1">Customer reviews and ratings</p>
           </div>
-          
+
           <div className="overflow-y-auto max-h-[400px]">
             {dashboardData.recentFeedbacks && dashboardData.recentFeedbacks.length > 0 ? (
               dashboardData.recentFeedbacks.slice(0, 5).map((feedback, index) => (
@@ -632,7 +623,7 @@ const Dashboard = () => {
           </div>
           <div className="mt-4 md:mt-0">
             <p className="text-sm text-gray-500">
-              Dashboard updated: {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              Dashboard updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
         </div>
