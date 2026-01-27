@@ -92,6 +92,8 @@ import VendorNotifications from "./Pages/VendorNotifications.js";
 import VendorRegistration from "./Pages/VendorRegistation.js";
 import MyProfile from "./Pages/MyProfile.js";
 import PrivacyPolicy from "./Pages/PrivacyAndPolicy.js";
+import VendorPaymentHistory from "./Pages/VendorPaymentHistory.js";
+import VendorPaymentSummary from "./Pages/VendorPaymentSummary.js";
 
 
 
@@ -171,6 +173,8 @@ function App() {
               <Route path="/upload-docs" element={<UploadDocuments />} />
               <Route path="/docs" element={<DocumentTable />} />
               <Route path="/paymentlist" element={<VendorInvoiceDashboard />} />
+              <Route path="/paymentsummary" element={<VendorPaymentSummary />} />
+              <Route path="/payment-history" element={<VendorPaymentHistory />} />
               <Route path="/usercoupons" element={<UserCoupons />} />
               <Route path="/createsurvey" element={<CreateSurvey />} />
               <Route path="/surveylist" element={<SurveyList />} />
