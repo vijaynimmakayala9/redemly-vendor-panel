@@ -169,14 +169,14 @@ export default function VendorInvoiceDashboard() {
             onChange={(e) => setSelectedMonth(e.target.value)}
             className="px-4 py-2 rounded-lg border shadow-sm"
           />
-          {invoice && (
+          {/* {invoice && (
             <button
               onClick={handleDownload}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             >
               <FaDownload />
             </button>
-          )}
+          )} */}
         </div>
       </div>
 

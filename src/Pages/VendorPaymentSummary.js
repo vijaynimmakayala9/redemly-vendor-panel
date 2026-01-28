@@ -36,7 +36,9 @@ export default function VendorPaymentSummary() {
           : `${API_BASE}/vendor/${vendorId}/payments/monthly-summary`;
 
       const res = await axios.get(url);
-      setData(res.data.summaries || []);
+      activeTab === "weekly" ? setData(res.data.weeks || []) : setData(res.data.monthlySummaries || [])
+      
+      console.log(res.data.weeks)
     } catch (err) {
       console.error(err);
       setData([]);
@@ -152,9 +154,10 @@ export default function VendorPaymentSummary() {
           <table className="w-full border rounded-lg overflow-hidden">
             <thead className="bg-blue-600 text-white">
               <tr>
+                <th className="p-3 text-center">S NO</th>
                 <th className="p-3 text-left">
                   {activeTab === "weekly" ? "Week" : "Month"}
-                </th>
+                </th>                
                 <th className="p-3 text-center">Coupons</th>
                 <th className="p-3 text-center">Total ($)</th>
                 <th className="p-3 text-center">Paid ($)</th>
@@ -169,9 +172,10 @@ export default function VendorPaymentSummary() {
                   key={idx}
                   className="border-t hover:bg-gray-50"
                 >
+                  <td className="p-3">{(page - 1) * PAGE_SIZE + idx + 1}</td>
                   <td className="p-3">
                     {activeTab === "weekly"
-                      ? row.week
+                      ? row.weekLabel
                       : row.monthName || row.month}
                   </td>
                   <td className="p-3 text-center">

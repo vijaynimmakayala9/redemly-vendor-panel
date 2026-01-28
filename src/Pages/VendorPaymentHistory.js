@@ -4,7 +4,6 @@ import jsPDF from "jspdf";
 import {
   FaSearch,
   FaFileInvoice,
-  FaDownload,
   FaFileCsv,
 } from "react-icons/fa";
 
@@ -32,8 +31,11 @@ export default function VendorPaymentHistory() {
       const res = await axios.get(
         `${API_BASE}/vendor/${vendorId}/payments/history`
       );
-      setHistory(res.data.monthlyHistory || []);
-    } catch {
+
+      // ✅ FIXED: new response structure
+      setHistory(res.data.history || []);
+    } catch (err) {
+      console.error(err);
       setHistory([]);
     } finally {
       setLoading(false);
@@ -43,9 +45,9 @@ export default function VendorPaymentHistory() {
   /* ---------------- Filtering + Search ---------------- */
   const filteredData = useMemo(() => {
     return history.filter((item) => {
-      const matchSearch = item.month
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      const matchSearch =
+        item.periodLabel?.toLowerCase().includes(search.toLowerCase()) ||
+        item.period?.toLowerCase().includes(search.toLowerCase());
 
       const matchStatus =
         statusFilter === "all" ||
@@ -66,7 +68,7 @@ export default function VendorPaymentHistory() {
   /* ---------------- CSV Export ---------------- */
   const exportCSV = () => {
     const headers = [
-      "Month",
+      "Period",
       "Coupons",
       "Total Amount",
       "Paid",
@@ -75,7 +77,7 @@ export default function VendorPaymentHistory() {
     ];
 
     const rows = filteredData.map((h) => [
-      h.month,
+      h.periodLabel,
       h.totalCouponsClaimed,
       h.totalAmount,
       h.amountPaid,
@@ -91,7 +93,7 @@ export default function VendorPaymentHistory() {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "payment_history.csv";
+    a.download = "vendor_payment_history.csv";
     a.click();
   };
 
@@ -104,7 +106,7 @@ export default function VendorPaymentHistory() {
     doc.line(20, 25, 190, 25);
 
     doc.setFontSize(12);
-    doc.text(`Month: ${row.month}`, 20, 40);
+    doc.text(`Period: ${row.periodLabel}`, 20, 40);
     doc.text(`Coupons Redeemed: ${row.totalCouponsClaimed}`, 20, 50);
     doc.text(`Total Amount: $${row.totalAmount}`, 20, 60);
     doc.text(`Amount Paid: $${row.amountPaid}`, 20, 70);
@@ -117,7 +119,7 @@ export default function VendorPaymentHistory() {
       120
     );
 
-    doc.save(`Invoice_${row.month}.pdf`);
+    doc.save(`Invoice_${row.period}.pdf`);
   };
 
   /* ---------------- UI ---------------- */
@@ -129,14 +131,12 @@ export default function VendorPaymentHistory() {
           Payment History
         </h2>
 
-        <div className="flex gap-3">
-          <button
-            onClick={exportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-          >
-            <FaFileCsv /> Export CSV
-          </button>
-        </div>
+        <button
+          onClick={exportCSV}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          <FaFileCsv /> Export CSV
+        </button>
       </div>
 
       {/* Filters */}
@@ -145,7 +145,7 @@ export default function VendorPaymentHistory() {
           <FaSearch className="absolute left-3 top-3 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by month (YYYY-MM)"
+            placeholder="Search by year"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -181,23 +181,22 @@ export default function VendorPaymentHistory() {
           <table className="w-full border rounded-lg overflow-hidden">
             <thead className="bg-blue-600 text-white">
               <tr>
-                <th className="p-3 text-left">Month</th>
+                <th className="p-3 text-left">S NO</th>
+                <th className="p-3 text-left">Period</th>
                 <th className="p-3">Coupons</th>
                 <th className="p-3">Total</th>
                 <th className="p-3">Paid</th>
                 <th className="p-3">Pending</th>
                 <th className="p-3">Status</th>
-                <th className="p-3">Action</th>
+                {/* <th className="p-3">Action</th> */}
               </tr>
             </thead>
 
             <tbody>
-              {paginatedData.map((row) => (
-                <tr
-                  key={row._id}
-                  className="border-t hover:bg-gray-50"
-                >
-                  <td className="p-3">{row.month}</td>
+              {paginatedData.map((row, idx) => (
+                <tr key={idx} className="border-t hover:bg-gray-50">
+                  <td className="p-3">{(page - 1) * PAGE_SIZE + idx + 1}</td>
+                  <td className="p-3">{row.periodLabel}</td>
                   <td className="p-3 text-center">
                     {row.totalCouponsClaimed}
                   </td>
@@ -221,14 +220,14 @@ export default function VendorPaymentHistory() {
                       {row.paymentStatus}
                     </span>
                   </td>
-                  <td className="p-3 text-center">
+                  {/* <td className="p-3 text-center">
                     <button
                       onClick={() => generateInvoice(row)}
                       className="flex items-center gap-2 mx-auto text-blue-600 hover:text-blue-800"
                     >
                       <FaFileInvoice /> Invoice
                     </button>
-                  </td>
+                  </td> */}
                 </tr>
               ))}
             </tbody>

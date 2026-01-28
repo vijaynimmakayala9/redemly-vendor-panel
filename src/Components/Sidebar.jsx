@@ -91,9 +91,9 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
       name: "Payments",
       path: "/paymentlist",
       dropdown: [
-        { name: "Payment Summary", path: "/paymentsummary" },
         { name: "Payment Due", path: "/paymentlist" },
-        { name: "Payment History", path: "/payment-history"}
+        { name: "Payment Summary", path: "/paymentsummary" },
+        { name: "Payment History", path: "/payment-history" }
       ],
     },
     {
