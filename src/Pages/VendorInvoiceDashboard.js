@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import jsPDF from "jspdf";
 import {
   FaFileInvoiceDollar,
   FaCreditCard,
   FaChartLine,
-  FaUniversity,
   FaCashRegister,
   FaUserTie,
 } from "react-icons/fa";
@@ -107,29 +105,25 @@ export default function VendorInvoiceDashboard() {
     }
   };
 
-  /* ---------------- Extract Bank Details ---------------- */
-  const bankMethod = invoice?.paymentMethods?.find(
-    (m) => m.method === "bank_transfer"
-  );
-  const bankDetails = bankMethod?.bankDetails;
-
   /* ---------------- UI ---------------- */
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between mb-8 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-blue-900 flex gap-2 items-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-blue-900 flex gap-2 items-center">
             <FaFileInvoiceDollar /> Vendor Invoice
           </h2>
-          <p className="text-gray-500">Monthly payments & invoices</p>
+          <p className="text-sm text-gray-500">
+            Monthly payments & invoices
+          </p>
         </div>
 
         <input
           type="month"
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
-          className="px-4 py-2 border rounded-lg"
+          className="px-4 py-2 border rounded-lg w-full sm:w-auto"
         />
       </div>
 
@@ -139,7 +133,7 @@ export default function VendorInvoiceDashboard() {
       {invoice && (
         <>
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Stat label="Coupons" value={invoice.totals.totalCouponsClaimed} />
             <Stat label="Total USD" value={`$${invoice.totals.totalAmountUSD}`} />
             <Stat
@@ -149,58 +143,36 @@ export default function VendorInvoiceDashboard() {
             <Stat label="Status" value={invoice.paymentStatus} status />
           </div>
 
-          {/* Vendor + Bank Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {/* Vendor Details */}
-            <div className="border rounded-xl p-6 bg-white shadow">
-              <h4 className="font-semibold mb-4 flex items-center gap-2">
-                <FaUserTie /> Vendor Details
-              </h4>
+          {/* Vendor Details */}
+          <div className="border rounded-xl p-5 bg-white shadow mb-6">
+            <h4 className="font-semibold mb-4 flex items-center gap-2">
+              <FaUserTie /> Vendor Details
+            </h4>
 
-              <div className="grid grid-cols-1 gap-3 text-sm">
-                <Detail label="Business Name" value={invoice.vendor.businessName} />
-                <Detail label="Vendor Name" value={invoice.vendor.name} />
-                <Detail label="Email" value={invoice.vendor.email} />
-                <Detail label="Phone" value={invoice.vendor.phone} />
-                <Detail label="Vendor ID" value={invoice.vendor.id} />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <Detail label="Business Name" value={invoice.vendor.businessName} />
+              <Detail label="Vendor Name" value={invoice.vendor.name} />
+              <Detail label="Email" value={invoice.vendor.email} />
+              <Detail label="Phone" value={invoice.vendor.phone} />
+              <Detail label="Vendor ID" value={invoice.vendor.id} />
             </div>
-
-            {/* Admin Bank Details */}
-            {bankDetails && (
-              <div className="border rounded-xl p-6 bg-gray-50 shadow">
-                <h4 className="font-semibold mb-4 flex items-center gap-2">
-                  <FaUniversity /> Admin Bank Details
-                </h4>
-
-                <div className="grid grid-cols-1 gap-3 text-sm">
-                  <Detail label="Account Holder" value={bankDetails.name} />
-                  <Detail label="Account Number" value={bankDetails.account} />
-                  <Detail label="IFSC Code" value={bankDetails.ifsc} />
-                </div>
-
-                <p className="mt-4 text-xs text-gray-500">
-                  ⚠️ Mention your <b>Vendor ID</b> in transfer reference.
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Payment Options */}
-          <div className="bg-white border rounded-2xl shadow-xl p-6 space-y-6">
+          <div className="bg-white border rounded-2xl shadow-xl p-5 sm:p-6 space-y-4">
             <h3 className="font-semibold text-lg">Payment Options</h3>
 
             <button
               disabled={paying || invoice.paymentStatus === "paid"}
               onClick={handlePayOnline}
-              className="flex gap-2 items-center bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
+              className="w-full sm:w-auto flex gap-2 justify-center items-center bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
               <FaCreditCard />
               {paying ? "Processing..." : "Pay Online (Razorpay)"}
             </button>
 
             <p className="flex gap-2 items-center text-sm text-gray-600">
-              <FaCashRegister /> Cash at Admin Office
+              <FaCashRegister /> Cash payment available at Admin Office
             </p>
           </div>
         </>
@@ -212,11 +184,11 @@ export default function VendorInvoiceDashboard() {
 /* ---------------- Components ---------------- */
 function Stat({ label, value, status }) {
   return (
-    <div className="p-5 rounded-xl border bg-white shadow flex justify-between">
+    <div className="p-4 rounded-xl border bg-white shadow flex justify-between">
       <div>
-        <p className="text-sm text-gray-500">{label}</p>
+        <p className="text-xs text-gray-500">{label}</p>
         <p
-          className={`text-xl font-bold capitalize ${
+          className={`text-lg font-bold capitalize ${
             status
               ? value === "paid"
                 ? "text-green-600"
@@ -227,7 +199,7 @@ function Stat({ label, value, status }) {
           {value}
         </p>
       </div>
-      <FaChartLine className="text-2xl text-blue-600" />
+      <FaChartLine className="text-xl text-blue-600" />
     </div>
   );
 }
