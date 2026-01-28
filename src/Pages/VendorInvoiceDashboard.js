@@ -3,14 +3,12 @@ import axios from "axios";
 import jsPDF from "jspdf";
 import {
   FaFileInvoiceDollar,
-  FaDownload,
   FaCreditCard,
   FaChartLine,
-  FaMoneyBillWave,
   FaUniversity,
   FaCashRegister,
+  FaUserTie,
 } from "react-icons/fa";
-import { MdOutlinePendingActions, MdOutlinePaid } from "react-icons/md";
 
 const API_BASE = "http://31.97.206.144:6091/api";
 
@@ -28,24 +26,22 @@ export default function VendorInvoiceDashboard() {
     fetchInvoice();
   }, [selectedMonth]);
 
-  /* ------------------ Load Razorpay ------------------ */
+  /* ---------------- Razorpay Script ---------------- */
   const loadRazorpayScript = () => {
     if (window.Razorpay) return;
-
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     document.body.appendChild(script);
   };
 
-  /* ------------------ Fetch Invoice ------------------ */
+  /* ---------------- Fetch Invoice ---------------- */
   const fetchInvoice = async () => {
     try {
       setLoading(true);
       setError("");
 
       const apiMonth = selectedMonth.replace("-0", "-");
-
       const res = await axios.get(
         `${API_BASE}/vendor/${vendorId}/payments/due?month=${apiMonth}`
       );
@@ -59,27 +55,7 @@ export default function VendorInvoiceDashboard() {
     }
   };
 
-  /* ------------------ Download PDF ------------------ */
-  const handleDownload = () => {
-    if (!invoice) return;
-
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Vendor Coupon Invoice", 20, 20);
-    doc.line(20, 25, 190, 25);
-
-    doc.setFontSize(12);
-    doc.text(`Business: ${invoice.vendor.businessName}`, 20, 40);
-    doc.text(`Vendor Name: ${invoice.vendor.name}`, 20, 50);
-    doc.text(`Period: ${invoice.period}`, 20, 60);
-    doc.text(`Coupons Redeemed: ${invoice.totals.totalCouponsClaimed}`, 20, 70);
-    doc.text(`Amount (USD): $${invoice.totals.totalAmountUSD}`, 20, 80);
-    doc.text(`Status: ${invoice.paymentStatus}`, 20, 90);
-
-    doc.save(`Invoice_${invoice.vendor.businessName}_${selectedMonth}.pdf`);
-  };
-
-  /* ------------------ Online Payment ------------------ */
+  /* ---------------- Pay Online ---------------- */
   const handlePayOnline = async () => {
     try {
       setPaying(true);
@@ -93,19 +69,13 @@ export default function VendorInvoiceDashboard() {
         .toISOString()
         .split("T")[0];
 
-      // 1️⃣ CREATE ORDER
       const orderRes = await axios.post(
         `${API_BASE}/vendor/${vendorId}/payments/online`,
-        {
-          period: "monthly",
-          startDate,
-          endDate,
-        }
+        { period: "monthly", startDate, endDate }
       );
 
       const order = orderRes.data.data;
 
-      // 2️⃣ OPEN RAZORPAY
       const options = {
         key: order.razorpayKey,
         amount: order.amountINR * 100,
@@ -113,36 +83,23 @@ export default function VendorInvoiceDashboard() {
         name: order.vendorName,
         description: `Invoice Payment - ${order.period}`,
         order_id: order.orderId,
-        handler: async function (response) {
+        handler: async (response) => {
           try {
-            // 3️⃣ VERIFY PAYMENT
             await axios.post(
               `${API_BASE}/vendor/${vendorId}/payments/verify`,
-              {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }
+              response
             );
-
-            alert("✅ Payment successful!");
+            alert("✅ Payment successful");
             fetchInvoice();
           } catch {
             alert("❌ Payment verification failed");
           }
         },
-        prefill: {
-          name: invoice.vendor.name,
-          email: invoice.vendor.email,
-          contact: invoice.vendor.phone,
-        },
-        theme: {
-          color: "#2563EB",
-        },
+        prefill: invoice.vendor,
+        theme: { color: "#2563EB" },
       };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      new window.Razorpay(options).open();
     } catch {
       alert("❌ Failed to initiate payment");
     } finally {
@@ -150,34 +107,30 @@ export default function VendorInvoiceDashboard() {
     }
   };
 
-  /* ------------------ UI ------------------ */
+  /* ---------------- Extract Bank Details ---------------- */
+  const bankMethod = invoice?.paymentMethods?.find(
+    (m) => m.method === "bank_transfer"
+  );
+  const bankDetails = bankMethod?.bankDetails;
+
+  /* ---------------- UI ---------------- */
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between gap-6 mb-8">
+      <div className="flex flex-col md:flex-row justify-between mb-8 gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-blue-900 flex items-center gap-2">
+          <h2 className="text-3xl font-bold text-blue-900 flex gap-2 items-center">
             <FaFileInvoiceDollar /> Vendor Invoice
           </h2>
           <p className="text-gray-500">Monthly payments & invoices</p>
         </div>
 
-        <div className="flex gap-3 items-center">
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-4 py-2 rounded-lg border shadow-sm"
-          />
-          {/* {invoice && (
-            <button
-              onClick={handleDownload}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              <FaDownload />
-            </button>
-          )} */}
-        </div>
+        <input
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="px-4 py-2 border rounded-lg"
+        />
       </div>
 
       {loading && <p className="text-center py-20">Loading...</p>}
@@ -186,38 +139,69 @@ export default function VendorInvoiceDashboard() {
       {invoice && (
         <>
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
             <Stat label="Coupons" value={invoice.totals.totalCouponsClaimed} />
-            <Stat label="USD" value={`$${invoice.totals.totalAmountUSD}`} />
-            <Stat label="INR" value={`₹${invoice.totals.amountPendingINR}`} />
+            <Stat label="Total USD" value={`$${invoice.totals.totalAmountUSD}`} />
             <Stat
-              label="Status"
-              value={invoice.paymentStatus}
-              status
+              label="Pending INR"
+              value={`₹${invoice.totals.amountPendingINR}`}
             />
+            <Stat label="Status" value={invoice.paymentStatus} status />
           </div>
 
-          {/* Payment */}
-          <div className="bg-white border rounded-2xl shadow-xl p-6">
-            <h3 className="font-semibold mb-4">Payment Options</h3>
+          {/* Vendor + Bank Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Vendor Details */}
+            <div className="border rounded-xl p-6 bg-white shadow">
+              <h4 className="font-semibold mb-4 flex items-center gap-2">
+                <FaUserTie /> Vendor Details
+              </h4>
+
+              <div className="grid grid-cols-1 gap-3 text-sm">
+                <Detail label="Business Name" value={invoice.vendor.businessName} />
+                <Detail label="Vendor Name" value={invoice.vendor.name} />
+                <Detail label="Email" value={invoice.vendor.email} />
+                <Detail label="Phone" value={invoice.vendor.phone} />
+                <Detail label="Vendor ID" value={invoice.vendor.id} />
+              </div>
+            </div>
+
+            {/* Admin Bank Details */}
+            {bankDetails && (
+              <div className="border rounded-xl p-6 bg-gray-50 shadow">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <FaUniversity /> Admin Bank Details
+                </h4>
+
+                <div className="grid grid-cols-1 gap-3 text-sm">
+                  <Detail label="Account Holder" value={bankDetails.name} />
+                  <Detail label="Account Number" value={bankDetails.account} />
+                  <Detail label="IFSC Code" value={bankDetails.ifsc} />
+                </div>
+
+                <p className="mt-4 text-xs text-gray-500">
+                  ⚠️ Mention your <b>Vendor ID</b> in transfer reference.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Payment Options */}
+          <div className="bg-white border rounded-2xl shadow-xl p-6 space-y-6">
+            <h3 className="font-semibold text-lg">Payment Options</h3>
 
             <button
               disabled={paying || invoice.paymentStatus === "paid"}
               onClick={handlePayOnline}
-              className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
+              className="flex gap-2 items-center bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
               <FaCreditCard />
-              {paying ? "Processing..." : "Pay Online"}
+              {paying ? "Processing..." : "Pay Online (Razorpay)"}
             </button>
 
-            <div className="mt-6 text-sm text-gray-500">
-              <p className="flex items-center gap-2">
-                <FaCashRegister /> Cash at Admin Office
-              </p>
-              <p className="flex items-center gap-2 mt-1">
-                <FaUniversity /> Bank Transfer Available
-              </p>
-            </div>
+            <p className="flex gap-2 items-center text-sm text-gray-600">
+              <FaCashRegister /> Cash at Admin Office
+            </p>
           </div>
         </>
       )}
@@ -225,7 +209,7 @@ export default function VendorInvoiceDashboard() {
   );
 }
 
-/* ------------------ Stat Card ------------------ */
+/* ---------------- Components ---------------- */
 function Stat({ label, value, status }) {
   return (
     <div className="p-5 rounded-xl border bg-white shadow flex justify-between">
@@ -233,10 +217,10 @@ function Stat({ label, value, status }) {
         <p className="text-sm text-gray-500">{label}</p>
         <p
           className={`text-xl font-bold capitalize ${
-            status && value === "paid"
-              ? "text-green-600"
-              : status
-              ? "text-yellow-600"
+            status
+              ? value === "paid"
+                ? "text-green-600"
+                : "text-yellow-600"
               : "text-gray-800"
           }`}
         >
@@ -244,6 +228,15 @@ function Stat({ label, value, status }) {
         </p>
       </div>
       <FaChartLine className="text-2xl text-blue-600" />
+    </div>
+  );
+}
+
+function Detail({ label, value }) {
+  return (
+    <div>
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="font-medium break-all">{value || "—"}</p>
     </div>
   );
 }
